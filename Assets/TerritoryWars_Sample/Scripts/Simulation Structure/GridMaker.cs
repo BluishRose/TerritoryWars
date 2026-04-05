@@ -6,6 +6,8 @@ using System;
 
 public class GridMaker : MonoBehaviour
 {
+    public bool startImmediately = false;
+
     [Header("Prefab Settings")]
     public GameObject tilePrefab;
     public float scaleFactor = 1f;
@@ -35,6 +37,14 @@ public class GridMaker : MonoBehaviour
     private void Awake()
     {
         RebuildGrid();
+    }
+
+    void Start()
+    {
+        if (startImmediately)
+        {
+            StartBattle();
+        }
     }
 
 
