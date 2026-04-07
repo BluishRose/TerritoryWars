@@ -174,22 +174,28 @@ MonoBehaviour:
     Chasers:
     - Chaser: {fileID: 1269873632}
       TileIndex: 0
+      TerritorySize: 0
       StartingPosition: {x: 80, y: 45}
     - Chaser: {fileID: 1412475103}
       TileIndex: 0
-      StartingPosition: {x: 159, y: 0}
+      TerritorySize: 0
+      StartingPosition: {x: 0, y: 0}
     - Chaser: {fileID: 1457781333}
       TileIndex: 0
-      StartingPosition: {x: 0, y: 89}
+      TerritorySize: 0
+      StartingPosition: {x: 159, y: 0}
     - Chaser: {fileID: 1040984745}
       TileIndex: 0
-      StartingPosition: {x: 80, y: 89}
+      TerritorySize: 0
+      StartingPosition: {x: 0, y: 89}
     - Chaser: {fileID: 1121844620}
       TileIndex: 0
-      StartingPosition: {x: 159, y: 89}
+      TerritorySize: 0
+      StartingPosition: {x: 80, y: 89}
     - Chaser: {fileID: 1815111129}
       TileIndex: 0
-      StartingPosition: {x: 0, y: 0}
+      TerritorySize: 0
+      StartingPosition: {x: 159, y: 89}
   TimeSettings:
     tickSpeed: 0
     frameSkip: 1

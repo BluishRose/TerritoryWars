@@ -9,6 +9,13 @@ public abstract class TileChaser : MonoBehaviour
     public Color TeamColor = Color.black;
     public Color OverlapColor = Color.black;
 
+    protected GridMaker GridInstance;
+
+    public void Initialize(GridMaker grid)
+    {
+        GridInstance = grid;
+    }
+
     //Determine the best tile this algorithm should move to next and return that tile. Assume that chaser will start on a valid position, so current position never needs to be checked.
     public abstract TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex);
 
@@ -70,8 +77,8 @@ public abstract class TileChaser : MonoBehaviour
                 //Ignore already visited tiles
                 if (visitedTiles.Contains(neighborIndex))
                     continue;
-                //Ignore invalid tiles
-                if (!allTiles[neighborIndex].IsValidTileForChaser(this))
+                //Ignore invalid tiles (ie. ones that can't be moved onto or through)
+                if (GridInstance.TileIsOccupied(neighborIndex, out TileChaser tileOwner) && tileOwner != this)
                     continue;
                 //Starting score equals current score plus 1 (all moves have equal cost).
                 float tentativeGScore = gScores[nextTileIndex] + 1;

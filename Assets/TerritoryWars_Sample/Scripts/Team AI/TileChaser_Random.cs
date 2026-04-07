@@ -21,27 +21,15 @@ public class TileChaser_Random : TileChaser
         westTile = (currentCol > 0) ? allTiles[gridIndex - 1] : null;
 
         //Performing isValidTile checks because this algorithm is allowed to travel on its own territory.
-
-        if (northTile != null && northTile.IsValidTileForChaser(this))
-        {
+        TileChaser tileOwner = null;
+        if (northTile != null && (!GridInstance.TileIsOccupied(northTile, out tileOwner) || tileOwner.Equals(this)))
             validTiles.Add(northTile);
-            //Debug.Log("North tile is valid");
-        }
-        if (southTile != null && southTile.IsValidTileForChaser(this))
-        {
+        if (southTile != null && (!GridInstance.TileIsOccupied(southTile, out tileOwner) || tileOwner.Equals(this)))
             validTiles.Add(southTile);
-            //Debug.Log("South tile is valid");
-        }
-        if (eastTile != null && eastTile.IsValidTileForChaser(this))
-        {
+        if (eastTile != null && (!GridInstance.TileIsOccupied(eastTile, out tileOwner) || tileOwner.Equals(this)))
             validTiles.Add(eastTile);
-            //Debug.Log("East tile is valid");
-        }
-        if (westTile != null && westTile.IsValidTileForChaser(this))
-        {
+        if (westTile != null && (!GridInstance.TileIsOccupied(westTile, out tileOwner) || tileOwner.Equals(this)))
             validTiles.Add(westTile);
-            //Debug.Log("West tile is valid");
-        }
 
         if (validTiles.Count == 0)
         {
