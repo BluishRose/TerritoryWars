@@ -55,9 +55,7 @@ public class GridMaker : MonoBehaviour
     [Header("Timescale Settings")]
     [SerializeField] private TerritoryWarTimescaleSettings TimeSettings;
 
-
-    private List<TileChaser> chaserInstances = new();
-
+    //Runtime Objects
     private List<TerritoryTile> gridTiles = new();
 
     private Dictionary<TileChaser, int> chaserPositions = new();
@@ -141,7 +139,6 @@ public class GridMaker : MonoBehaviour
             }
             chaserPositions.Add(chaserInfo.Chaser, startingIndex);
             ChaserClaimsTile(chaserInfo.Chaser, gridTiles[startingIndex], false);
-            chaserInstances.Add(chaserInfo.Chaser);
         }
 
         isBattleActive = true;
@@ -171,8 +168,10 @@ public class GridMaker : MonoBehaviour
             Dictionary<TileChaser, TerritoryTile> chaserMoves = new();
 
             //Get each tile's ideal moves to check for conflicts.
-            foreach (TileChaser chaser in chaserInstances)
+            foreach (TileChaserInfo chaserInfo in ChaserSettings.Chasers)
             {
+                TileChaser chaser = chaserInfo.Chaser;
+
                 TerritoryTile chaserTile = chaser.DetermineIdealNextTile(gridTiles, GridSettings.gridHeight, GridSettings.gridWidth, chaserPositions[chaser]);
 
                 chaserMoves.Add(chaser, chaserTile);
