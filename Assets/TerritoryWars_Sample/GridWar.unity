@@ -173,23 +173,23 @@ MonoBehaviour:
   ChaserSettings:
     Chasers:
     - Chaser: {fileID: 1269873632}
-      StartingXPosition: 80
-      StartingYPosition: 45
+      TileIndex: 0
+      StartingPosition: {x: 80, y: 45}
     - Chaser: {fileID: 1412475103}
-      StartingXPosition: 0
-      StartingYPosition: 0
+      TileIndex: 0
+      StartingPosition: {x: 159, y: 0}
     - Chaser: {fileID: 1457781333}
-      StartingXPosition: 159
-      StartingYPosition: 0
+      TileIndex: 0
+      StartingPosition: {x: 0, y: 89}
     - Chaser: {fileID: 1040984745}
-      StartingXPosition: 0
-      StartingYPosition: 89
+      TileIndex: 0
+      StartingPosition: {x: 80, y: 89}
     - Chaser: {fileID: 1121844620}
-      StartingXPosition: 80
-      StartingYPosition: 89
+      TileIndex: 0
+      StartingPosition: {x: 159, y: 89}
     - Chaser: {fileID: 1815111129}
-      StartingXPosition: 159
-      StartingYPosition: 89
+      TileIndex: 0
+      StartingPosition: {x: 0, y: 0}
   TimeSettings:
     tickSpeed: 0
     frameSkip: 1
