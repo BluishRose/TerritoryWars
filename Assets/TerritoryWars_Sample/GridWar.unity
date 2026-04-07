@@ -163,33 +163,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2f7022ad707c4214082d61b835768de0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GridMaker
-  startImmediately: 1
-  tilePrefab: {fileID: 8704132306572208855, guid: e75668c3aec16814ab1837083e831271, type: 3}
-  scaleFactor: 1
-  autoRebuild: 0
-  numRows: 90
-  numColumns: 160
-  chasers:
-  - Chaser: {fileID: 1269873632}
-    StartingRow: 0
-    StartingColumn: 0
-  - Chaser: {fileID: 1412475103}
-    StartingRow: 0
-    StartingColumn: 80
-  - Chaser: {fileID: 1457781333}
-    StartingRow: 0
-    StartingColumn: 159
-  - Chaser: {fileID: 1040984745}
-    StartingRow: 89
-    StartingColumn: 0
-  - Chaser: {fileID: 1121844620}
-    StartingRow: 89
-    StartingColumn: 80
-  - Chaser: {fileID: 1815111129}
-    StartingRow: 89
-    StartingColumn: 159
-  tickSpeed: 0
-  frameSkip: 1
+  GridSettings:
+    tilePrefab: {fileID: 8704132306572208855, guid: e75668c3aec16814ab1837083e831271, type: 3}
+    gridWidth: 160
+    gridHeight: 90
+    scaleFactor: 1
+    RebuildGridOnValidate: 0
+    BeginBattleOnSceneStart: 1
+  ChaserSettings:
+    Chasers:
+    - Chaser: {fileID: 1269873632}
+      StartingXPosition: 80
+      StartingYPosition: 45
+    - Chaser: {fileID: 1412475103}
+      StartingXPosition: 0
+      StartingYPosition: 0
+    - Chaser: {fileID: 1457781333}
+      StartingXPosition: 159
+      StartingYPosition: 0
+    - Chaser: {fileID: 1040984745}
+      StartingXPosition: 0
+      StartingYPosition: 89
+    - Chaser: {fileID: 1121844620}
+      StartingXPosition: 80
+      StartingYPosition: 89
+    - Chaser: {fileID: 1815111129}
+      StartingXPosition: 159
+      StartingYPosition: 89
+  TimeSettings:
+    tickSpeed: 0
+    frameSkip: 1
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -452,9 +455,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1040984742}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a3bb2bc875f7f74c9e5d7e869d74ca2, type: 3}
+  m_Script: {fileID: 11500000, guid: 4915463c95298944ba790fd3873507c5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TileChaser_ClosestAvailable
+  m_EditorClassIdentifier: Assembly-CSharp::TileChaser_Random
   TeamColor: {r: 0.44705883, g: 0.654902, b: 0.7529412, a: 1}
   OverlapColor: {r: 0.35686275, g: 0.5254902, b: 0.6039216, a: 1}
 --- !u!1 &1121844619
@@ -636,9 +639,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 1457781330}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a3bb2bc875f7f74c9e5d7e869d74ca2, type: 3}
+  m_Script: {fileID: 11500000, guid: 4915463c95298944ba790fd3873507c5, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::TileChaser_ClosestAvailable
+  m_EditorClassIdentifier: Assembly-CSharp::TileChaser_Random
   TeamColor: {r: 0.1882353, g: 0.19215687, b: 0.3764706, a: 1}
   OverlapColor: {r: 0.14901961, g: 0.15294118, b: 0.3019608, a: 1}
 --- !u!1 &1815111126

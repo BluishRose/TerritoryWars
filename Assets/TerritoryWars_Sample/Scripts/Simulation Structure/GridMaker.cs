@@ -9,7 +9,7 @@ public class TerritoryWarGridSettings
     [Header("Prefabs")]
     public GameObject tilePrefab;
 
-    [Header("Grid Settings")]
+    [Header("Grid Size")]
     [Tooltip("Number of columns in the grid. (Horizontal Length")]
     public int gridWidth = 160;
     [Tooltip("Number of columns in the grid. (Vertical Length)")]
@@ -22,18 +22,41 @@ public class TerritoryWarGridSettings
     public bool BeginBattleOnSceneStart = false;
 }
 
+[Serializable]
+public class TerritoryWarChaserSettings
+{
+    public List<TileChaserInfo> Chasers = new();
+}
+
+
+[Serializable]
+public class TileChaserInfo
+{
+    public TileChaser Chaser;
+    public int StartingXPosition;
+    public int StartingYPosition;
+}
+
+[Serializable]
+public class TerritoryWarTimescaleSettings
+{
+    [Tooltip("Number of times to update chasers per second.")]
+    [Range(0f, 0.5f)] public float tickSpeed = 0.2f;
+    [Tooltip("If tickSpeed is set to 0, this determines how many turns to simulate before updating the graphic.")]
+    [Range(1, 10)] public int frameSkip = 1;
+}
 
 public class GridMaker : MonoBehaviour
 {
+    [Header("Grid Settings")]
     [SerializeField] private TerritoryWarGridSettings GridSettings;
-
     [Header("Chaser Settings")]
-    [SerializeField] private List<TileChaserInfo> chasers = new();
+    [SerializeField] private TerritoryWarChaserSettings ChaserSettings;
+    [Header("Timescale Settings")]
+    [SerializeField] private TerritoryWarTimescaleSettings TimeSettings;
+
+
     private List<TileChaser> chaserInstances = new();
-    ///Number of times to update chasers per second.
-    [SerializeField, Range(0f, 0.5f)] private float tickSpeed = 0.2f;
-    //If tickSpeed is set to 0, this determines how many turns to simulate before updating the graphic.
-    [SerializeField, Range(1, 10)] private int frameSkip = 1;
 
     private List<TerritoryTile> gridTiles = new();
 
@@ -108,9 +131,9 @@ public class GridMaker : MonoBehaviour
         }
 
         //Move chasers to starting positions.
-        foreach(TileChaserInfo chaserInfo in chasers)
+        foreach(TileChaserInfo chaserInfo in ChaserSettings.Chasers)
         {
-            int startingIndex = chaserInfo.StartingRow * GridSettings.gridWidth + chaserInfo.StartingColumn;
+            int startingIndex = chaserInfo.StartingYPosition * GridSettings.gridWidth + chaserInfo.StartingXPosition;
             if (startingIndex < 0 || startingIndex >= gridTiles.Count)
             {
                 Debug.LogError("StartBattle: Starting position for " + chaserInfo.Chaser.name + " is out of bounds.");
@@ -175,19 +198,18 @@ public class GridMaker : MonoBehaviour
             }
 
 
-
             //Wait for the next tick before sending chasers to new tiles again
             //if (tickSpeed == 0 && ++turnNumber % frameSkip == 0)
-            if (tickSpeed == 0)
+            if (TimeSettings.tickSpeed == 0)
             {
-                if (frameSkipCounter % frameSkip == 0)
+                if (frameSkipCounter % TimeSettings.frameSkip == 0)
                 {
                     frameSkipCounter = 0;
                     yield return null;
                 }
                 frameSkipCounter++;
             }
-            else yield return new WaitForSeconds(tickSpeed);
+            else yield return new WaitForSeconds(TimeSettings.tickSpeed);
         }
     }
 
@@ -333,12 +355,4 @@ public class GridMaker : MonoBehaviour
         return adjacentTiles;
     }
 
-}
-
-[Serializable]
-public class TileChaserInfo
-{
-    public TileChaser Chaser;
-    public int StartingRow;
-    public int StartingColumn;
 }
