@@ -1,21 +1,31 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Collections;
-using UnityEditor.U2D.Aseprite;
 using System;
+
+[Serializable]
+public class TerritoryWarGridSettings
+{
+    [Header("Prefabs")]
+    public GameObject tilePrefab;
+
+    [Header("Grid Settings")]
+    [Tooltip("Number of columns in the grid. (Horizontal Length")]
+    public int gridWidth = 160;
+    [Tooltip("Number of columns in the grid. (Vertical Length)")]
+    public int gridHeight = 90;
+    [Tooltip("Scale of the prefabs used to create the grid.")]
+    public float scaleFactor = 1f;
+
+    [Header("DEBUG")]
+    public bool RebuildGridOnValidate = false;
+    public bool BeginBattleOnSceneStart = false;
+}
+
 
 public class GridMaker : MonoBehaviour
 {
-    public bool startImmediately = false;
-
-    [Header("Prefab Settings")]
-    public GameObject tilePrefab;
-    public float scaleFactor = 1f;
-
-    [Header("Grid Settings")]
-    public bool autoRebuild = true;
-    public int numRows = 9;
-    public int numColumns = 16;
+    [SerializeField] private TerritoryWarGridSettings GridSettings;
 
     [Header("Chaser Settings")]
     [SerializeField] private List<TileChaserInfo> chasers = new();
@@ -41,7 +51,7 @@ public class GridMaker : MonoBehaviour
 
     void Start()
     {
-        if (startImmediately)
+        if (GridSettings.BeginBattleOnSceneStart)
         {
             StartBattle();
         }
@@ -50,7 +60,7 @@ public class GridMaker : MonoBehaviour
 
     private void OnValidate()
     {
-        if (Application.isPlaying && autoRebuild)
+        if (Application.isPlaying && GridSettings.RebuildGridOnValidate)
         {
             RebuildGrid();
         }
@@ -66,14 +76,14 @@ public class GridMaker : MonoBehaviour
 
         gridTiles.Clear();
 
-        for (int row = 0; row < numRows; row++)
+        for (int row = 0; row < GridSettings.gridHeight; row++)
         {
-            for (int col = 0; col < numColumns; col++)
+            for (int col = 0; col < GridSettings.gridWidth; col++)
             {
                 //Position new tile gameobject based on row and column, and scale it by the scale factor
-                Vector3 position = new Vector3(col * scaleFactor, row * scaleFactor, 0);
-                GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity);
-                tile.transform.localScale = Vector3.one * scaleFactor;
+                Vector3 position = new Vector3(col * GridSettings.scaleFactor, row * GridSettings.scaleFactor, 0);
+                GameObject tile = Instantiate(GridSettings.tilePrefab, position, Quaternion.identity);
+                tile.transform.localScale = Vector3.one * GridSettings.scaleFactor;
                 tile.transform.SetParent(this.transform);
 
                 //Get the TerritoryTile component from the new tile gameobject and add it to the gridTiles list
@@ -100,7 +110,7 @@ public class GridMaker : MonoBehaviour
         //Move chasers to starting positions.
         foreach(TileChaserInfo chaserInfo in chasers)
         {
-            int startingIndex = chaserInfo.StartingRow * numColumns + chaserInfo.StartingColumn;
+            int startingIndex = chaserInfo.StartingRow * GridSettings.gridWidth + chaserInfo.StartingColumn;
             if (startingIndex < 0 || startingIndex >= gridTiles.Count)
             {
                 Debug.LogError("StartBattle: Starting position for " + chaserInfo.Chaser.name + " is out of bounds.");
@@ -140,7 +150,7 @@ public class GridMaker : MonoBehaviour
             //Get each tile's ideal moves to check for conflicts.
             foreach (TileChaser chaser in chaserInstances)
             {
-                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(gridTiles, numRows, numColumns, chaserPositions[chaser]);
+                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(gridTiles, GridSettings.gridHeight, GridSettings.gridWidth, chaserPositions[chaser]);
 
                 chaserMoves.Add(chaser, chaserTile);
 
@@ -206,7 +216,7 @@ public class GridMaker : MonoBehaviour
         if (checkForLoops)
         {
             //If battle is not over, check if any tiles adjacent to the one modified are capable of reaching other chasers. If not, that tile is also claimed.
-            foreach (int adjacentIndex in GetAdjacentIndicies(gridTiles.IndexOf(tile), numRows, numColumns))
+            foreach (int adjacentIndex in GetAdjacentIndicies(gridTiles.IndexOf(tile), GridSettings.gridHeight, GridSettings.gridWidth))
             {
                 if (!gridTiles[adjacentIndex].IsOccupied())
                 {
@@ -237,12 +247,12 @@ public class GridMaker : MonoBehaviour
 
     public TerritoryTile GetTileAt(int row, int column)
     {
-        if (row < 0 || row >= numRows || column < 0 || column >= numColumns)
+        if (row < 0 || row >= GridSettings.gridHeight || column < 0 || column >= GridSettings.gridWidth)
         {
             Debug.LogError("GetTileAt: Row or column index out of bounds.");
             return null;
         }
-        int index = row * numColumns + column;
+        int index = row * GridSettings.gridWidth + column;
         return gridTiles[index];
     }
 
@@ -263,7 +273,7 @@ public class GridMaker : MonoBehaviour
             int currentIndex = queue.Dequeue();
 
             //Examine adjacent tiles. 
-            foreach(int nextNeighbor in GetAdjacentIndicies(currentIndex, numRows, numColumns))
+            foreach(int nextNeighbor in GetAdjacentIndicies(currentIndex, GridSettings.gridHeight, GridSettings.gridWidth))
             {
                 if (visited[nextNeighbor])
                     continue;
