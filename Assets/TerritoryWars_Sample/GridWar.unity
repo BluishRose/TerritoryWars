@@ -694,8 +694,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4915463c95298944ba790fd3873507c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TileChaser_Random
-  TeamColor: {r: 0.42352942, g: 0.56078434, b: 0.2627451, a: 1}
-  OverlapColor: {r: 0.3372549, g: 0.44705883, b: 0.21176471, a: 1}
+  TeamColor: {r: 0.2627451, g: 0.34901962, b: 0.16470589, a: 1}
+  OverlapColor: {r: 0.21176471, g: 0.2784314, b: 0.13333334, a: 1}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

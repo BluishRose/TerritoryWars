@@ -1,7 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
 
 public abstract class TileChaser : MonoBehaviour
 {
@@ -72,7 +70,7 @@ public abstract class TileChaser : MonoBehaviour
             }
 
             //If not done, check tile neighbors to update scores and checkable tiles
-            foreach(int neighborIndex in GridMaker.GetAdjacentIndicies(nextTileIndex, gridRows, gridColumns))
+            foreach(int neighborIndex in GridInstance.GetAdjacentIndicies(nextTileIndex))
             {
                 //Ignore already visited tiles
                 if (visitedTiles.Contains(neighborIndex))

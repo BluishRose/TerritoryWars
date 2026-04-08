@@ -3,41 +3,67 @@ using System.Collections.Generic;
 
 public class TileChaser_Random : TileChaser
 {
+    /// <summary>
+    /// Chooses a random tile from the available adjacent tiles to move to. This algorithm can move on its own territory, but will not move onto enemy territory.
+    /// </summary>
+    /// <param name="allTiles"></param>
+    /// <param name="gridRows"></param>
+    /// <param name="gridColumns"></param>
+    /// <param name="gridIndex"></param>
+    /// <returns></returns>
     public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex)
     {
         //From available tiles, pick a random tile to move to.
-
-        TerritoryTile northTile, southTile, eastTile, westTile;
+        Dictionary<int, TerritoryTile> tileOptions = new();
 
         int currentRow = gridIndex / gridColumns;
         int currentCol = gridIndex % gridColumns;
 
-        //Determine valid tiles to move to. Valid tiles are empty or self-owned        
-        List<TerritoryTile> validTiles = new();
+        //North tile check
+        if (currentRow < gridRows - 1)
+        {
+            int tileIndex = gridIndex + gridColumns;
 
-        northTile = (currentRow < gridRows - 1) ? allTiles[gridIndex + gridColumns] : null;
-        southTile = (currentRow > 0) ? allTiles[gridIndex - gridColumns] : null;
-        eastTile = (currentCol < gridColumns - 1) ? allTiles[gridIndex + 1] : null;
-        westTile = (currentCol > 0) ? allTiles[gridIndex - 1] : null;
+            if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
+                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+        }
 
-        //Performing isValidTile checks because this algorithm is allowed to travel on its own territory.
-        TileChaser tileOwner = null;
-        if (northTile != null && (!GridInstance.TileIsOccupied(northTile, out tileOwner) || tileOwner.Equals(this)))
-            validTiles.Add(northTile);
-        if (southTile != null && (!GridInstance.TileIsOccupied(southTile, out tileOwner) || tileOwner.Equals(this)))
-            validTiles.Add(southTile);
-        if (eastTile != null && (!GridInstance.TileIsOccupied(eastTile, out tileOwner) || tileOwner.Equals(this)))
-            validTiles.Add(eastTile);
-        if (westTile != null && (!GridInstance.TileIsOccupied(westTile, out tileOwner) || tileOwner.Equals(this)))
-            validTiles.Add(westTile);
+        //South tile
+        if (currentRow > 0)
+        {
+            int tileIndex = gridIndex - gridColumns;
 
-        if (validTiles.Count == 0)
+            if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
+                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+        }
+
+        //East tile
+        if (currentCol < gridColumns - 1)
+        {
+            int tileIndex = gridIndex + 1;
+
+            if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
+                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+        }
+
+        //West tile
+        if (currentCol > 0)
+        {
+            int tileIndex = gridIndex - 1;
+
+            if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
+                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+        }
+
+        //Check for validity
+        if (tileOptions.Count == 0)
         {
             return null;
         }
 
-        int randomIndex = Random.Range(0, validTiles.Count);
+        //Get a random element from the dictionary of options and return it
+        List<TerritoryTile> tileOptionValues = new(tileOptions.Values);
 
-        return validTiles[randomIndex];
+        return tileOptionValues[Random.Range(0, tileOptionValues.Count)];
     }
 }

@@ -1,4 +1,3 @@
-using UnityEngine;
 using System.Collections.Generic;
 
 public class TileChaser_ClosestAvailable : TileChaser
@@ -15,10 +14,10 @@ public class TileChaser_ClosestAvailable : TileChaser
     public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex)
     {
         //Check to see if any adjacent tiles are valid. If so, return one of them.
-        List<int> adjacentTiles = GridMaker.GetAdjacentIndicies(gridIndex, gridRows, gridColumns);
+        List<int> adjacentTiles = GridInstance.GetAdjacentIndicies(gridIndex);
         if (adjacentTiles.Count > 0)
             foreach (int adjacentIndex in adjacentTiles)
-                if (!GridInstance.TileIsOccupied(allTiles[adjacentIndex], out _))
+                if (!GridInstance.TileIsOccupied(adjacentIndex, out _))
                     return allTiles[adjacentIndex];
 
         //If no immediate tiles are valid, look along borders of territory for the closest available tile that can be reached by traveling on self-owned tiles.
@@ -36,7 +35,7 @@ public class TileChaser_ClosestAvailable : TileChaser
         while (tilesToCheck.Count > 0 && destinationIndex == -1)
         {
             int currentIndex = tilesToCheck.Dequeue();
-            List<int> neighbors = GridMaker.GetAdjacentIndicies(currentIndex, gridRows, gridColumns);
+            List<int> neighbors = GridInstance.GetAdjacentIndicies(currentIndex);
             foreach (int neighborIndex in neighbors)
             {
                 //Ignore already visited tiles
@@ -45,7 +44,7 @@ public class TileChaser_ClosestAvailable : TileChaser
                 visitedTiles.Add(neighborIndex);
                 //If we can move to this tile, mark it as the closest available tile.
 
-                bool tileOccupied = GridInstance.TileIsOccupied(allTiles[neighborIndex], out TileChaser owner);
+                bool tileOccupied = GridInstance.TileIsOccupied(neighborIndex, out TileChaser owner);
 
                 if (!tileOccupied)
                 {
