@@ -1,39 +1,26 @@
-using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
-using UnityEditor.U2D.Aseprite;
-using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
-public class GridMaker : MonoBehaviour
+public partial class GridMaker : MonoBehaviour
 {
-    public bool startImmediately = false;
-
-    [Header("Prefab Settings")]
-    public GameObject tilePrefab;
-    public float scaleFactor = 1f;
-
     [Header("Grid Settings")]
-    public bool autoRebuild = true;
-    public int numRows = 9;
-    public int numColumns = 16;
-
+    [SerializeField] private TerritoryWarGridSettings GridSettings;
     [Header("Chaser Settings")]
-    [SerializeField] private List<TileChaserInfo> chasers = new();
-    private List<TileChaser> chaserInstances = new();
-    ///Number of times to update chasers per second.
-    [SerializeField, Range(0f, 0.5f)] private float tickSpeed = 0.2f;
-    //If tickSpeed is set to 0, this determines how many turns to simulate before updating the graphic.
-    [SerializeField, Range(1, 10)] private int frameSkip = 1;
+    [SerializeField] private TerritoryWarChaserSettings ChaserSettings;
+    [Header("Timescale Settings")]
+    [SerializeField] private TerritoryWarTimescaleSettings TimeSettings;
 
-    private List<TerritoryTile> gridTiles = new();
-
-    private Dictionary<TileChaser, int> chaserPositions = new();
+    //Runtime Objects
+    private List<TerritoryTile> tileInstances = new();
+    private Dictionary<int, TileChaserInfo> tileOwnershipMap = new();
+    private int totalNumberTiles;
 
     private bool isBattleActive = false;
     private bool battleIsOver = false;
 
-    #region Grid Building
-
+    #region Object Initialization
     private void Awake()
     {
         RebuildGrid();
@@ -41,50 +28,21 @@ public class GridMaker : MonoBehaviour
 
     void Start()
     {
-        if (startImmediately)
+        if (GridSettings.BeginBattleOnSceneStart)
         {
             StartBattle();
         }
     }
 
-
     private void OnValidate()
     {
-        if (Application.isPlaying && autoRebuild)
+        if (Application.isPlaying && GridSettings.RebuildGridOnValidate)
         {
             RebuildGrid();
         }
     }
-
-    [ContextMenu("Rebuild Grid")]
-    void RebuildGrid()
-    {
-        foreach (TerritoryTile tile in gridTiles)
-        {
-            Destroy(tile.gameObject);
-        }
-
-        gridTiles.Clear();
-
-        for (int row = 0; row < numRows; row++)
-        {
-            for (int col = 0; col < numColumns; col++)
-            {
-                //Position new tile gameobject based on row and column, and scale it by the scale factor
-                Vector3 position = new Vector3(col * scaleFactor, row * scaleFactor, 0);
-                GameObject tile = Instantiate(tilePrefab, position, Quaternion.identity);
-                tile.transform.localScale = Vector3.one * scaleFactor;
-                tile.transform.SetParent(this.transform);
-
-                //Get the TerritoryTile component from the new tile gameobject and add it to the gridTiles list
-                TerritoryTile tileComponent = tile.GetComponent<TerritoryTile>();
-                gridTiles.Add(tileComponent);
-            }
-        }
-    }
-
-
     #endregion
+
 
     #region Battle Loop
 
@@ -97,25 +55,26 @@ public class GridMaker : MonoBehaviour
             return;
         }
 
-        //Move chasers to starting positions.
-        foreach(TileChaserInfo chaserInfo in chasers)
+        //Initialize chasers
+        foreach (TileChaserInfo chaserInfo in ChaserSettings.Chasers)
         {
-            int startingIndex = chaserInfo.StartingRow * numColumns + chaserInfo.StartingColumn;
-            if (startingIndex < 0 || startingIndex >= gridTiles.Count)
+            //Calculate the starting index in the 1D array
+            int startingIndex = chaserInfo.StartingPosition.y * GridSettings.gridWidth + chaserInfo.StartingPosition.x;
+            if (startingIndex < 0 || startingIndex >= tileInstances.Count)
             {
                 Debug.LogError("StartBattle: Starting position for " + chaserInfo.Chaser.name + " is out of bounds.");
                 return;
             }
-            chaserPositions.Add(chaserInfo.Chaser, startingIndex);
-            ChaserClaimsTile(chaserInfo.Chaser, gridTiles[startingIndex], false);
-            chaserInstances.Add(chaserInfo.Chaser);
+
+            chaserInfo.Chaser.Initialize(this);
+
+            MoveChaserToIndex(chaserInfo, startingIndex);
         }
 
         isBattleActive = true;
         battleIsOver = false;
 
         StartCoroutine(TerritoryBattle());
-
     }
 
     private IEnumerator TerritoryBattle()
@@ -129,20 +88,22 @@ public class GridMaker : MonoBehaviour
             Debug.Log("Turn " + turnNumber);
 
             //Before moving chasers, reset the border color of all tiles to make it easier to see where chasers are moving each turn.
-            foreach (TerritoryTile tile in gridTiles)
+            foreach (TerritoryTile tile in tileInstances)
             {
                 tile.ResetBorderColor();
             }
 
             //Get a valid tile for each chaser to move to.
-            Dictionary<TileChaser, TerritoryTile> chaserMoves = new();
+            Dictionary<TileChaserInfo, TerritoryTile> chaserMoves = new();
 
             //Get each tile's ideal moves to check for conflicts.
-            foreach (TileChaser chaser in chaserInstances)
+            foreach (TileChaserInfo chaserInfo in ChaserSettings.Chasers)
             {
-                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(gridTiles, numRows, numColumns, chaserPositions[chaser]);
+                TileChaser chaser = chaserInfo.Chaser;
 
-                chaserMoves.Add(chaser, chaserTile);
+                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(tileInstances, GridSettings.gridHeight, GridSettings.gridWidth, chaserInfo.TileIndex);
+
+                chaserMoves.Add(chaserInfo, chaserTile);
 
                 //foreach(var move in chaserMoves)
                 //{
@@ -158,138 +119,153 @@ public class GridMaker : MonoBehaviour
             foreach (var move in chaserMoves)
             {
                 if (move.Value != null)
-                {
-                    ChaserClaimsTile(move.Key, move.Value, true);
-                }
-                chaserPositions[move.Key] = gridTiles.IndexOf(move.Value);
+                    MoveChaserToIndex(move.Key, tileInstances.IndexOf(move.Value));
             }
 
-
+            //Check all unowned tiles to see if they are encapsulated by a single chaser.
+            CheckForLoops();
 
             //Wait for the next tick before sending chasers to new tiles again
             //if (tickSpeed == 0 && ++turnNumber % frameSkip == 0)
-            if (tickSpeed == 0)
+            if (TimeSettings.tickSpeed == 0)
             {
-                if (frameSkipCounter % frameSkip == 0)
+                if (frameSkipCounter % TimeSettings.frameSkip == 0)
                 {
                     frameSkipCounter = 0;
                     yield return null;
                 }
                 frameSkipCounter++;
             }
-            else yield return new WaitForSeconds(tickSpeed);
+            else yield return new WaitForSeconds(TimeSettings.tickSpeed);
         }
     }
 
+    private void MoveChaserToIndex(TileChaserInfo chaser, int newIndex)
+    {
+        //Make sure the tile moved to is flagged as claimed by the chaser
+        ChaserClaimsTile(chaser, newIndex);
+
+        //Update tile index of the chaser
+        chaser.TileIndex = newIndex;
+    }
+
+    private void ChaserClaimsTile(TileChaserInfo chaser, int newIndex)
+    {
+        //If the new tile is already owned by the chaser, don't increment their score
+        if (tileOwnershipMap[newIndex] != null && !tileOwnershipMap[newIndex].Equals(chaser.Chaser))
+            chaser.TerritorySize++;
+
+        //Update tile at new index visually
+        tileInstances[newIndex].SetNewColors(chaser.Chaser.OverlapColor, chaser.Chaser.TeamColor);
+
+        //Update ownership map
+        tileOwnershipMap[newIndex] = chaser;
+    }
+
+    /// <summary>
+    /// Scans the map to see if any chasers have encapsulated an area.
+    /// </summary>
+    private void CheckForLoops()
+    {
+        //Track tiles that have been visited so everything is evaluated only once
+        bool[] visited = new bool[tileOwnershipMap.Count];
+
+        //Iterate through all tiles
+        for (int i = 0; i <  tileOwnershipMap.Count; i++)
+        {
+            //Ignore tiles we've already seen or are already owned
+            if (visited[i] || tileOwnershipMap[i] != null)
+                continue;
+
+            //Begin generating a region that originates from this cell
+            List<int> region = new();
+            HashSet<TileChaserInfo> borderingTeams = new();
+            
+            //Build a new queue to track tile checking order and mark current cell as examined.
+            Queue<int> queue = new();
+            queue.Enqueue(i);
+            visited[i] = true;
+
+            //For each unexamined tile
+            while (queue.Count > 0)
+            {
+                int currentIndex = queue.Dequeue();
+                region.Add(currentIndex);
+
+                //For each neighbor of the currently-examined tile
+                foreach (int neighborIndex in GetAdjacentIndicies(currentIndex))
+                {
+                    //If tile is unowned
+                    if (tileOwnershipMap[neighborIndex] == null)
+                    {
+                        //If the tile hasn't been visited already, add it to the queue to search later.
+                        if (!visited[neighborIndex])
+                        {
+                            visited[neighborIndex] = true;
+                            queue.Enqueue(neighborIndex);
+                        }
+                    }
+                    //If tile is owned, add that to the list of bordering teams
+                    else
+                    {
+                        borderingTeams.Add(tileOwnershipMap[neighborIndex]);
+                    }
+                }
+
+            }
+
+            //Evaluate the results of the region. If there is a single owner, it must be encapsulated.
+            if (borderingTeams.Count == 1)
+            {
+                TileChaserInfo newOwner = borderingTeams.First();
+                foreach(int index in region)
+                    ChaserClaimsTile(newOwner, index);
+            }
+
+        }
+    }
 
     #endregion
 
     #region Turn Logic
 
-    public void ChaserClaimsTile(TileChaser chaser, int tileIndex, bool checkForLoops)
+    /// <summary>
+    /// Performs a series of checks to determine if a winner can be decided.
+    /// </summary>
+    private bool WarCanBeDecided()
     {
-        if (tileIndex < 0 || tileIndex >= gridTiles.Count)
+        //Quick check - if all tiles are claimed, there is nothing else to fight over.
+        if (NumberOfClaimedTiles() == tileInstances.Count)
+            return true;
+
+
+        //TO DO: If all chasers have exhausted their options, war can be decided.
+
+
+        return false;
+
+        int NumberOfClaimedTiles()
         {
-            Debug.LogError("ChaserClaimsTile: Tile index out of bounds.");
-            return;
-        }
-        ChaserClaimsTile(chaser, gridTiles[tileIndex], checkForLoops);
-    }
-
-    public void ChaserClaimsTile(TileChaser chaser, TerritoryTile tile, bool checkForLoops)
-    {
-        tile.SetOccupyingChaser(chaser);
-
-        //Check if battle is over
-        CheckWinConditions();
-
-        if (checkForLoops)
-        {
-            //If battle is not over, check if any tiles adjacent to the one modified are capable of reaching other chasers. If not, that tile is also claimed.
-            foreach (int adjacentIndex in GetAdjacentIndicies(gridTiles.IndexOf(tile), numRows, numColumns))
-            {
-                if (!gridTiles[adjacentIndex].IsOccupied())
-                {
-                    if (UnclaimedTileHasDominantChaser(adjacentIndex, out TileChaser dominantChaser))
-                    {
-                        ChaserClaimsTile(dominantChaser, gridTiles[adjacentIndex], checkForLoops);
-                    }
-                }
-            }
+            int numClaimedTiles = 0;
+            foreach (TileChaserInfo chaser in ChaserSettings.Chasers)
+                numClaimedTiles += chaser.TerritorySize;
+            return numClaimedTiles;
         }
     }
 
-    private void CheckWinConditions()
+    public bool TileIsOccupied(int tileIndex, out TileChaser tileOwner)
     {
-        foreach (TerritoryTile t in gridTiles)
-        {
-            if (!t.IsOccupied())
-            {
-                return;
-            }
-        }
-
-        //battleIsOver = true;
+        tileOwner = tileOwnershipMap[tileIndex]?.Chaser;
+        return tileOwner != null;
     }
 
 
     #endregion
 
-    public TerritoryTile GetTileAt(int row, int column)
-    {
-        if (row < 0 || row >= numRows || column < 0 || column >= numColumns)
-        {
-            Debug.LogError("GetTileAt: Row or column index out of bounds.");
-            return null;
-        }
-        int index = row * numColumns + column;
-        return gridTiles[index];
-    }
+    #region Utility Functions
 
-    public bool UnclaimedTileHasDominantChaser(int startIndex, out TileChaser dominantChaser)
-    {
-        bool[] visited = new bool[gridTiles.Count];
-        dominantChaser = null;
 
-        Queue<int> queue = new Queue<int>();
-
-        queue.Enqueue(startIndex);
-        visited[startIndex] = true;
-
-        //While there are still adjacent tiles to check
-        while (queue.Count > 0)
-        {
-            //Examine next tile
-            int currentIndex = queue.Dequeue();
-
-            //Examine adjacent tiles. 
-            foreach(int nextNeighbor in GetAdjacentIndicies(currentIndex, numRows, numColumns))
-            {
-                if (visited[nextNeighbor])
-                    continue;
-
-                TerritoryTile examinedTile = gridTiles[nextNeighbor];
-                //If any adjacent tile is occupied by a chaser
-                if (examinedTile.IsOccupied())
-                {
-                    //If we haven't found a chaser yet, set foundChaser to the chaser occupying this tile and keep searching.
-                    if (dominantChaser == null)
-                        dominantChaser = examinedTile.OccupyingChaser;
-                    //If we've already found a chaser and this tile is occupied by a different chaser, return true because this tile can reach multiple chasers.
-                    else if (examinedTile.OccupyingChaser != dominantChaser)
-                         return false;
-                }
-                //If the tile is not occupied by a chaser, add it to the queue to examine its neighbors later if we haven't already visited it.
-                else
-                {
-                    visited[nextNeighbor] = true;
-                    queue.Enqueue(nextNeighbor);
-                }
-            }
-        }
-        //If we've gone through all reachable tiles and only found one chaser, return it because this tile cannot reach multiple chasers.
-        return true;
-    }
+    #endregion
 
     /// <summary>
     /// Returns a list of indicies corresponding to adjacent cells in cardinal directions. If a cell does not exist in a given direction, it is not included in the list.
@@ -298,37 +274,24 @@ public class GridMaker : MonoBehaviour
     /// <param name="numRows"></param>
     /// <param name="numColumns"></param>
     /// <returns></returns>
-    public static List<int> GetAdjacentIndicies(int tileIndex, int numRows, int numColumns)
+    public List<int> GetAdjacentIndicies(int tileIndex)
     {
         List<int> adjacentTiles = new();
-        int row = tileIndex / numColumns;
-        int col = tileIndex % numColumns;
+        int row = tileIndex / GridSettings.gridWidth;
+        int col = tileIndex % GridSettings.gridWidth;
         //Get the tile in each direction if it exists. If it doesn't exist, skip it.
-        if (row < numRows - 1)
-        {
-            adjacentTiles.Add(tileIndex + numColumns);
-        }
+        if (row < GridSettings.gridHeight - 1)
+            adjacentTiles.Add(tileIndex + GridSettings.gridWidth);
         if (row > 0)
-        {
-            adjacentTiles.Add(tileIndex - numColumns);
-        }
-        if (col < numColumns - 1)
-        {
-            adjacentTiles.Add(tileIndex+1);
-        }
+            adjacentTiles.Add(tileIndex - GridSettings.gridWidth);
+        if (col < GridSettings.gridWidth - 1)
+            adjacentTiles.Add(tileIndex + 1);
         if (col > 0)
-        {
             adjacentTiles.Add(tileIndex - 1);
-        }
         return adjacentTiles;
     }
 
-}
 
-[Serializable]
-public class TileChaserInfo
-{
-    public TileChaser Chaser;
-    public int StartingRow;
-    public int StartingColumn;
+    
+
 }
