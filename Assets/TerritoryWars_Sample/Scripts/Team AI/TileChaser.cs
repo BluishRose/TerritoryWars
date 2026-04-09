@@ -15,7 +15,7 @@ public abstract class TileChaser : MonoBehaviour
     }
 
     //Determine the best tile this algorithm should move to next and return that tile. Assume that chaser will start on a valid position, so current position never needs to be checked.
-    public abstract TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex);
+    public abstract int DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex);
 
     /// <summary>
     /// Returns the first step of the best path to the desired tile using A* pathfinding.
@@ -26,7 +26,7 @@ public abstract class TileChaser : MonoBehaviour
     /// <param name="startIndex"></param>
     /// <param name="endIndex"></param>
     /// <returns></returns>
-    protected int FindBestStep(List<TerritoryTile> allTiles, int startIndex, int endIndex)
+    protected int FindBestStep(int startIndex, int endIndex)
     {
         //Track the best path so far to the end tile
         Dictionary<int, int> bestPathToTile = new();

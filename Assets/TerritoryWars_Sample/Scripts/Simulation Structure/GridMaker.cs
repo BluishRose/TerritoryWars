@@ -96,14 +96,14 @@ public partial class GridMaker : MonoBehaviour
             }
 
             //Get a valid tile for each chaser to move to.
-            Dictionary<TileChaserInfo, TerritoryTile> chaserMoves = new();
+            Dictionary<TileChaserInfo, int> chaserMoves = new();
 
             //Get each tile's ideal moves to check for conflicts.
             foreach (TileChaserInfo chaserInfo in ChaserSettings.Chasers)
             {
                 TileChaser chaser = chaserInfo.Chaser;
 
-                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(tileInstances, chaserInfo.TileIndex);
+                int chaserTile = chaser.DetermineIdealNextTile(tileInstances, chaserInfo.TileIndex);
 
                 chaserMoves.Add(chaserInfo, chaserTile);
 
@@ -120,8 +120,8 @@ public partial class GridMaker : MonoBehaviour
             //Move each chaser to their new tile if possible. If not possible, they will stay on their current tile.
             foreach (var move in chaserMoves)
             {
-                if (move.Value != null)
-                    MoveChaserToIndex(move.Key, tileInstances.IndexOf(move.Value));
+                if (move.Value != -1)
+                    MoveChaserToIndex(move.Key, move.Value);
             }
 
             //Check all unowned tiles to see if they are encapsulated by a single chaser.

@@ -11,10 +11,10 @@ public class TileChaser_Random : TileChaser
     /// <param name="gridColumns"></param>
     /// <param name="startingIndex"></param>
     /// <returns></returns>
-    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
+    public override int DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
     {
         //From available tiles, pick a random tile to move to.
-        Dictionary<int, TerritoryTile> tileOptions = new();
+        List<int> tileOptions = new();
 
         int gridColumns = GridInstance.GridWidth;
 
@@ -27,7 +27,7 @@ public class TileChaser_Random : TileChaser
             int tileIndex = startingIndex + gridColumns;
 
             if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
-                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+                tileOptions.Add(tileIndex);
         }
 
         //South tile
@@ -36,7 +36,7 @@ public class TileChaser_Random : TileChaser
             int tileIndex = startingIndex - gridColumns;
 
             if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
-                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+                tileOptions.Add(tileIndex);
         }
 
         //East tile
@@ -45,7 +45,7 @@ public class TileChaser_Random : TileChaser
             int tileIndex = startingIndex + 1;
 
             if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
-                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+                tileOptions.Add(tileIndex);
         }
 
         //West tile
@@ -54,18 +54,15 @@ public class TileChaser_Random : TileChaser
             int tileIndex = startingIndex - 1;
 
             if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
-                tileOptions.Add(tileIndex, allTiles[tileIndex]);
+                tileOptions.Add(tileIndex);
         }
 
         //Check for validity
         if (tileOptions.Count == 0)
         {
-            return null;
+            return -1;
         }
 
-        //Get a random element from the dictionary of options and return it
-        List<TerritoryTile> tileOptionValues = new(tileOptions.Values);
-
-        return tileOptionValues[Random.Range(0, tileOptionValues.Count)];
+        return tileOptions[Random.Range(0, tileOptions.Count)];
     }
 }

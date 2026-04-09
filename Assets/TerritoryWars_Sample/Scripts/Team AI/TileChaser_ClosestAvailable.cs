@@ -11,14 +11,14 @@ public class TileChaser_ClosestAvailable : TileChaser
     /// <param name="startingIndex"></param>
     /// <returns></returns>
     /// <exception cref="System.NotImplementedException"></exception>
-    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
+    public override int DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
     {
         //Check to see if any adjacent tiles are valid. If so, return one of them.
         List<int> adjacentTiles = GridInstance.GetAdjacentIndicies(startingIndex);
         if (adjacentTiles.Count > 0)
             foreach (int adjacentIndex in adjacentTiles)
                 if (!GridInstance.TileIsOccupied(adjacentIndex, out _))
-                    return allTiles[adjacentIndex];
+                    return adjacentIndex;
 
         //If no immediate tiles are valid, look along borders of territory for the closest available tile that can be reached by traveling on self-owned tiles.
         Queue<int> tilesToCheck = new();
@@ -60,13 +60,13 @@ public class TileChaser_ClosestAvailable : TileChaser
         //If we found a destination tile, get the next step towards it. Otherwise, return null to indicate no valid tiles.
         if (destinationIndex != -1)
         {
-            int nextStepIndex = FindBestStep(allTiles, startingIndex, destinationIndex);
+            int nextStepIndex = FindBestStep(startingIndex, destinationIndex);
             //If there is no next step to take, return null.
             if (nextStepIndex != -1)
-                return allTiles[nextStepIndex];
+                return nextStepIndex;
         }
 
-        return null;
+        return -1;
 
     }
 }

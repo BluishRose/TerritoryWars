@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 public class TileChaser_DoNothing : TileChaser
 {
-    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
+    public override int DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
     {
-        return null;
+        return -1;
     }
 }
