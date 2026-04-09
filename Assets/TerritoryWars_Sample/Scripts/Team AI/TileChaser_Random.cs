@@ -9,20 +9,22 @@ public class TileChaser_Random : TileChaser
     /// <param name="allTiles"></param>
     /// <param name="gridRows"></param>
     /// <param name="gridColumns"></param>
-    /// <param name="gridIndex"></param>
+    /// <param name="startingIndex"></param>
     /// <returns></returns>
-    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex)
+    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
     {
         //From available tiles, pick a random tile to move to.
         Dictionary<int, TerritoryTile> tileOptions = new();
 
-        int currentRow = gridIndex / gridColumns;
-        int currentCol = gridIndex % gridColumns;
+        int gridColumns = GridInstance.GridWidth;
+
+        int currentRow = startingIndex / gridColumns;
+        int currentCol = startingIndex % gridColumns;
 
         //North tile check
-        if (currentRow < gridRows - 1)
+        if (currentRow < GridInstance.GridHeight - 1)
         {
-            int tileIndex = gridIndex + gridColumns;
+            int tileIndex = startingIndex + gridColumns;
 
             if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
                 tileOptions.Add(tileIndex, allTiles[tileIndex]);
@@ -31,7 +33,7 @@ public class TileChaser_Random : TileChaser
         //South tile
         if (currentRow > 0)
         {
-            int tileIndex = gridIndex - gridColumns;
+            int tileIndex = startingIndex - gridColumns;
 
             if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
                 tileOptions.Add(tileIndex, allTiles[tileIndex]);
@@ -40,7 +42,7 @@ public class TileChaser_Random : TileChaser
         //East tile
         if (currentCol < gridColumns - 1)
         {
-            int tileIndex = gridIndex + 1;
+            int tileIndex = startingIndex + 1;
 
             if (tileIndex < allTiles.Count && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
                 tileOptions.Add(tileIndex, allTiles[tileIndex]);
@@ -49,7 +51,7 @@ public class TileChaser_Random : TileChaser
         //West tile
         if (currentCol > 0)
         {
-            int tileIndex = gridIndex - 1;
+            int tileIndex = startingIndex - 1;
 
             if (tileIndex >= 0 && (!GridInstance.TileIsOccupied(tileIndex, out TileChaser tileOwner) || Equals(tileOwner)))
                 tileOptions.Add(tileIndex, allTiles[tileIndex]);

@@ -8,13 +8,13 @@ public class TileChaser_ClosestAvailable : TileChaser
     /// <param name="allTiles"></param>
     /// <param name="gridRows"></param>
     /// <param name="gridColumns"></param>
-    /// <param name="gridIndex"></param>
+    /// <param name="startingIndex"></param>
     /// <returns></returns>
     /// <exception cref="System.NotImplementedException"></exception>
-    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex)
+    public override TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex)
     {
         //Check to see if any adjacent tiles are valid. If so, return one of them.
-        List<int> adjacentTiles = GridInstance.GetAdjacentIndicies(gridIndex);
+        List<int> adjacentTiles = GridInstance.GetAdjacentIndicies(startingIndex);
         if (adjacentTiles.Count > 0)
             foreach (int adjacentIndex in adjacentTiles)
                 if (!GridInstance.TileIsOccupied(adjacentIndex, out _))
@@ -25,8 +25,8 @@ public class TileChaser_ClosestAvailable : TileChaser
         HashSet<int> visitedTiles = new();
 
         //Start BFS from current tile
-        tilesToCheck.Enqueue(gridIndex);
-        visitedTiles.Add(gridIndex);
+        tilesToCheck.Enqueue(startingIndex);
+        visitedTiles.Add(startingIndex);
 
         //Store our destination index
         int destinationIndex = -1;
@@ -60,7 +60,7 @@ public class TileChaser_ClosestAvailable : TileChaser
         //If we found a destination tile, get the next step towards it. Otherwise, return null to indicate no valid tiles.
         if (destinationIndex != -1)
         {
-            int nextStepIndex = FindBestStep(allTiles, gridRows, gridColumns, gridIndex, destinationIndex);
+            int nextStepIndex = FindBestStep(allTiles, startingIndex, destinationIndex);
             //If there is no next step to take, return null.
             if (nextStepIndex != -1)
                 return allTiles[nextStepIndex];

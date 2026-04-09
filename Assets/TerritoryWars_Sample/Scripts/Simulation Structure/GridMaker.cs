@@ -7,6 +7,9 @@ public partial class GridMaker : MonoBehaviour
 {
     [Header("Grid Settings")]
     [SerializeField] private TerritoryWarGridSettings GridSettings;
+    public int GridWidth => GridSettings.gridWidth;
+    public int GridHeight => GridSettings.gridHeight;
+
     [Header("Chaser Settings")]
     [SerializeField] private TerritoryWarChaserSettings ChaserSettings;
     [Header("Timescale Settings")]
@@ -15,7 +18,6 @@ public partial class GridMaker : MonoBehaviour
     //Runtime Objects
     private List<TerritoryTile> tileInstances = new();
     private Dictionary<int, TileChaserInfo> tileOwnershipMap = new();
-    private int totalNumberTiles;
 
     private bool isBattleActive = false;
     private bool battleIsOver = false;
@@ -59,7 +61,7 @@ public partial class GridMaker : MonoBehaviour
         foreach (TileChaserInfo chaserInfo in ChaserSettings.Chasers)
         {
             //Calculate the starting index in the 1D array
-            int startingIndex = chaserInfo.StartingPosition.y * GridSettings.gridWidth + chaserInfo.StartingPosition.x;
+            int startingIndex = chaserInfo.StartingPosition.y * GridWidth + chaserInfo.StartingPosition.x;
             if (startingIndex < 0 || startingIndex >= tileInstances.Count)
             {
                 Debug.LogError("StartBattle: Starting position for " + chaserInfo.Chaser.name + " is out of bounds.");
@@ -101,7 +103,7 @@ public partial class GridMaker : MonoBehaviour
             {
                 TileChaser chaser = chaserInfo.Chaser;
 
-                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(tileInstances, GridSettings.gridHeight, GridSettings.gridWidth, chaserInfo.TileIndex);
+                TerritoryTile chaserTile = chaser.DetermineIdealNextTile(tileInstances, chaserInfo.TileIndex);
 
                 chaserMoves.Add(chaserInfo, chaserTile);
 
@@ -277,14 +279,14 @@ public partial class GridMaker : MonoBehaviour
     public List<int> GetAdjacentIndicies(int tileIndex)
     {
         List<int> adjacentTiles = new();
-        int row = tileIndex / GridSettings.gridWidth;
-        int col = tileIndex % GridSettings.gridWidth;
+        int row = tileIndex / GridWidth;
+        int col = tileIndex % GridWidth;
         //Get the tile in each direction if it exists. If it doesn't exist, skip it.
-        if (row < GridSettings.gridHeight - 1)
-            adjacentTiles.Add(tileIndex + GridSettings.gridWidth);
+        if (row < GridHeight - 1)
+            adjacentTiles.Add(tileIndex + GridWidth);
         if (row > 0)
-            adjacentTiles.Add(tileIndex - GridSettings.gridWidth);
-        if (col < GridSettings.gridWidth - 1)
+            adjacentTiles.Add(tileIndex - GridWidth);
+        if (col < GridWidth - 1)
             adjacentTiles.Add(tileIndex + 1);
         if (col > 0)
             adjacentTiles.Add(tileIndex - 1);

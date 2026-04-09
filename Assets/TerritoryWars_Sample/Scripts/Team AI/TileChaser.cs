@@ -15,7 +15,7 @@ public abstract class TileChaser : MonoBehaviour
     }
 
     //Determine the best tile this algorithm should move to next and return that tile. Assume that chaser will start on a valid position, so current position never needs to be checked.
-    public abstract TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int gridIndex);
+    public abstract TerritoryTile DetermineIdealNextTile(List<TerritoryTile> allTiles, int startingIndex);
 
     /// <summary>
     /// Returns the first step of the best path to the desired tile using A* pathfinding.
@@ -26,25 +26,31 @@ public abstract class TileChaser : MonoBehaviour
     /// <param name="startIndex"></param>
     /// <param name="endIndex"></param>
     /// <returns></returns>
-    protected int FindBestStep(List<TerritoryTile> allTiles, int gridRows, int gridColumns, int startIndex, int endIndex)
+    protected int FindBestStep(List<TerritoryTile> allTiles, int startIndex, int endIndex)
     {
         //Track the best path so far to the end tile
         Dictionary<int, int> bestPathToTile = new();
 
         //Using a priority queue (of sorts) to track what tiles to check next
-        Dictionary<int, float> tilesToCheckWithPriority = new();
-        tilesToCheckWithPriority.Add(startIndex, 0);
+        Dictionary<int, float> tilesToCheckWithPriority = new()
+        {
+            { startIndex, 0 }
+        };
 
         List<int> visitedTiles = new();
 
         //Tile scores
         //Gscore is the cost to get from start tile to end tile
-        Dictionary<int, float> gScores = new();
-        gScores.Add(startIndex, 0);
+        Dictionary<int, float> gScores = new()
+        {
+            { startIndex, 0 }
+        };
 
         //Fscore is the cost to get from start to end tile using the best path so far.
-        Dictionary<int, float> fScores = new();
-        fScores.Add(startIndex, HeuristicCostEstimate(startIndex, endIndex, gridColumns));
+        Dictionary<int, float> fScores = new()
+        {
+            { startIndex, HeuristicCostEstimate(startIndex, endIndex, GridInstance.GridWidth) }
+        };
 
         while (tilesToCheckWithPriority.Count > 0)
         {
@@ -86,7 +92,7 @@ public abstract class TileChaser : MonoBehaviour
                 {
                     bestPathToTile[neighborIndex] = nextTileIndex;
                     gScores[neighborIndex] = tentativeGScore;
-                    fScores[neighborIndex] = tentativeGScore + HeuristicCostEstimate(neighborIndex, endIndex, gridColumns);
+                    fScores[neighborIndex] = tentativeGScore + HeuristicCostEstimate(neighborIndex, endIndex, GridInstance.GridWidth);
                     if (!tilesToCheckWithPriority.ContainsKey(neighborIndex))
                         tilesToCheckWithPriority.Add(neighborIndex, fScores[neighborIndex]);
                 }
