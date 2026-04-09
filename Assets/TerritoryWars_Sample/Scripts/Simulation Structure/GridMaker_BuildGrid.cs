@@ -13,11 +13,12 @@ public partial class GridMaker : MonoBehaviour
             Destroy(tile.gameObject);
         }
         tileInstances.Clear();
+        tileOwnershipMap.Clear();
 
         //Create new grid of tiles based on settings
-        for (int row = 0; row < GridSettings.gridHeight; row++)
+        for (int row = 0; row < GridHeight; row++)
         {
-            for (int col = 0; col < GridSettings.gridWidth; col++)
+            for (int col = 0; col < GridWidth; col++)
             {
                 //Position new tile gameobject based on row and column, and scale it by the scale factor
                 Vector3 position = new(col * GridSettings.scaleFactor, row * GridSettings.scaleFactor, 0);
@@ -28,7 +29,7 @@ public partial class GridMaker : MonoBehaviour
                 //Get the TerritoryTile component from the new tile gameobject and add it to the gridTiles list
                 TerritoryTile tileComponent = tile.GetComponent<TerritoryTile>();
                 tileInstances.Add(tileComponent);
-                tileOwnershipMap.Add(col + (row * GridSettings.gridWidth), null);
+                tileOwnershipMap.Add(col + (row * GridWidth), null);
             }
         }
     }
